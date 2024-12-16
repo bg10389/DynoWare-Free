@@ -68,7 +68,8 @@ class CombinedLoggerApp:
         self.modbus_port_var = tk.StringVar()
         self.modbus_port_dropdown = ttk.Combobox(modbus_frame, textvariable=self.modbus_port_var, state='readonly', width=12)
         self.modbus_port_dropdown.grid(row=0, column=1, padx=5, pady=5)
-        self.refresh_modbus_ports()
+        # Refresh COM ports AFTER status_label is defined
+        # self.refresh_modbus_ports()
         self.modbus_refresh_button = tk.Button(modbus_frame, text="Refresh", command=self.refresh_modbus_ports)
         self.modbus_refresh_button.grid(row=0, column=2, padx=5, pady=5)
         
@@ -247,10 +248,10 @@ class CombinedLoggerApp:
         self.modbus_port_dropdown['values'] = port_names
         if port_names:
             self.modbus_port_var.set(port_names[0])
-            self.status_label.config(text=f"Available Modbus COM Ports: {port_names}")
+            self.status_label.config(text=f"Available Modbus COM Ports: {port_names}", fg="green")
         else:
             self.modbus_port_var.set("")
-            self.status_label.config(text="No Modbus COM ports found.")
+            self.status_label.config(text="No Modbus COM ports found.", fg="red")
     
     def start_modbus_logging(self):
         """Open serial port if needed and begin polling at user-defined interval."""
@@ -469,12 +470,12 @@ class CombinedLoggerApp:
             return
         
         try:
-            self.can_device = GsUsb.scan()
-            if len(self.can_device) == 0:
+            devices = GsUsb.scan()
+            if len(devices) == 0:
                 self.status_label.config(text="No CAN device detected.", fg="red")
                 messagebox.showerror("Error", "No CAN device detected.")
                 return
-            self.can_device = self.can_device[0]
+            self.can_device = devices[0]
             print(f"Connected to CAN device: {self.can_device}")
             
             # Set bitrate
@@ -661,7 +662,7 @@ class CombinedLoggerApp:
                                     })
                                     self.can_plot_data['time'].append(timestamp)
                                     self.can_plot_data['voltage'].append(voltage)
-                                
+                            
                             else:
                                 print("CAN_PACKET_STATUS_5 frame has insufficient data.")
                 
@@ -716,29 +717,31 @@ class CombinedLoggerApp:
             self.status_label.config(text=f"Error saving CAN CSV: {e}", fg="red")
     
     # --------------------
-    # Saving Functions
-    # --------------------
-    
-    # (Already implemented separate save functions for Modbus and CAN)
-    
-    # --------------------
     # Cleanup on Exit
     # --------------------
     def on_closing(self):
         """Handle application closing."""
+        # Stop Modbus logging
         if self.logging_modbus:
             self.stop_modbus_logging()
+        
+        # Stop CAN logging
         if self.can_logging:
             self.stop_can_logging()
+        
+        # Close Modbus serial port
         if self.ser and self.ser.is_open:
             self.ser.close()
+        
+        # Stop CAN device
         if self.can_active and self.can_device:
             try:
                 self.can_device.stop()
             except:
                 pass
+        
         self.master.destroy()
-    
+
 # --------------------
 # Run Application
 # --------------------
