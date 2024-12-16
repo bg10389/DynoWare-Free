@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from tkinter import ttk, messagebox
 from gs_usb.gs_usb import GsUsb
@@ -209,6 +210,7 @@ class VESCReader:
                 return
 
             # Wait for 20 ms
+            
             time.sleep(0.02)
 
     def read_can_data(self):
