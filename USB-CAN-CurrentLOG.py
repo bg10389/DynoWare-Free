@@ -57,7 +57,7 @@ class VESCReader:
     def __init__(self, root):
         self.root = root
         self.root.title("VESC Real-Time Data (Current, Voltage, RPM)")
-        self.root.geometry("800x600")
+        self.root.geometry("900x700")
     
         # Initialize variables
         self.device = None
@@ -110,21 +110,27 @@ class VESCReader:
         self.status_label = tk.Label(self.root, text="Not connected.", font=("Arial", 12), fg="red")
         self.status_label.pack(pady=5)
     
-        # Data Display Frame
-        data_frame = tk.Frame(self.root)
-        data_frame.pack(pady=10)
+        # Data Display Frame with Separate Boxes
+        data_display_frame = tk.Frame(self.root)
+        data_display_frame.pack(pady=10)
     
-        # Current Label
-        self.current_label = tk.Label(data_frame, text="Current: -- A", font=("Arial", 16))
-        self.current_label.grid(row=0, column=0, padx=20, pady=5)
+        # Current Box
+        current_box = tk.LabelFrame(data_display_frame, text="Current (A)", padx=10, pady=10)
+        current_box.pack(side=tk.LEFT, padx=20, pady=10, fill="both", expand=True)
+        self.current_label = tk.Label(current_box, text="-- A", font=("Arial", 16))
+        self.current_label.pack()
     
-        # Voltage Label
-        self.voltage_label = tk.Label(data_frame, text="Voltage: -- V", font=("Arial", 16))
-        self.voltage_label.grid(row=0, column=1, padx=20, pady=5)
+        # Voltage Box
+        voltage_box = tk.LabelFrame(data_display_frame, text="Voltage (V)", padx=10, pady=10)
+        voltage_box.pack(side=tk.LEFT, padx=20, pady=10, fill="both", expand=True)
+        self.voltage_label = tk.Label(voltage_box, text="-- V", font=("Arial", 16))
+        self.voltage_label.pack()
     
-        # RPM Label
-        self.rpm_label = tk.Label(data_frame, text="RPM: --", font=("Arial", 16))
-        self.rpm_label.grid(row=0, column=2, padx=20, pady=5)
+        # RPM Box
+        rpm_box = tk.LabelFrame(data_display_frame, text="RPM", padx=10, pady=10)
+        rpm_box.pack(side=tk.LEFT, padx=20, pady=10, fill="both", expand=True)
+        self.rpm_label = tk.Label(rpm_box, text="-- RPM", font=("Arial", 16))
+        self.rpm_label.pack()
     
         # Matplotlib Figure
         self.figure = Figure(figsize=(8, 4), dpi=100)
@@ -299,8 +305,8 @@ class VESCReader:
                                 rpm = erpm  # Scale is 1
     
                                 # Update GUI labels
-                                self.current_label.config(text=f"Current: {current:.2f} A")
-                                self.rpm_label.config(text=f"RPM: {rpm} RPM")
+                                self.current_label.config(text=f"{current:.2f} A")
+                                self.rpm_label.config(text=f"{rpm} RPM")
                                 print(f"Received Current: {current:.2f} A, RPM: {rpm} RPM")
     
                                 # Log data if logging is active
@@ -333,7 +339,7 @@ class VESCReader:
                                 voltage = voltage_raw / 10.0  # Scale
     
                                 # Update GUI label
-                                self.voltage_label.config(text=f"Voltage: {voltage:.2f} V")
+                                self.voltage_label.config(text=f"{voltage:.2f} V")
                                 print(f"Received Voltage: {voltage:.2f} V")
     
                                 # Log data if logging is active
@@ -344,7 +350,7 @@ class VESCReader:
                                             'timestamp': timestamp,
                                             'current': self.plot_data['current'][-1] if self.plot_data['current'] else 0,
                                             'voltage': voltage,
-                                            'rpm': self.rpm_label.cget("text").split()[1]  # Extract RPM value
+                                            'rpm': self.rpm_label.cget("text").split()[0]  # Extract RPM value
                                         })
                                         # Update plot data
                                         self.plot_data['time'].append(timestamp)
@@ -414,7 +420,9 @@ class VESCReader:
     
             if self.plot_data['time']:
                 self.ax.set_xlim(0, max(self.plot_data['time']))
-                self.ax.set_ylim(0, max(max(self.plot_data['current']), max(self.plot_data['voltage'])) * 1.2)
+                y_min = min(min(self.plot_data['current'], default=0), min(self.plot_data['voltage'], default=0)) * 0.9
+                y_max = max(max(self.plot_data['current'], default=0), max(self.plot_data['voltage'], default=0)) * 1.2
+                self.ax.set_ylim(y_min, y_max)
     
             self.canvas.draw()
     
