@@ -52,6 +52,11 @@ class ModbusActiveApp:
         self.speed_label = tk.Label(read_frame, text="--", width=12, anchor="w")
         self.speed_label.grid(row=1, column=1, padx=5, pady=5)
 
+        tk.Label(read_frame, text="watts:").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        self.watts_label = tk.Label(read_frame, text="--", width=12, anchor="w")
+        self.watts_label.grid(row=2, column=1, padx=5, pady=5)
+
+
         # --------------------
         # FRAME: Last Raw Response
         # --------------------
@@ -149,6 +154,17 @@ class ModbusActiveApp:
             speed_rpm = speed_val / 10.0
             self.speed_label.config(text=f"{speed_rpm:.1f}")
             self.output_text.insert(tk.END, f"Speed: {speed_rpm:.1f} RPM\n")
+
+        # 3) Read Watts (optional, if needed)
+        watts_frame_hex = "01 03 00 04 00 02 85 CA" 
+        watts_val = self.send_raw_frame(watts_frame_hex, parse_scale=1.0, signed=False)
+        if watts_val is not None:
+            watts = watts_val
+            self.watts_label.config(text=f"{watts:.1f}")
+            self.output_text.insert(tk.END, f"Watts: {watts:.1f}\n")
+        else:
+            self.watts_label.config(text="--")
+            self.output_text.insert(tk.END, "Watts: --\n")
 
     def send_raw_frame(self, frame_hex, parse_scale=1.0, signed=False):
         """

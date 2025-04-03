@@ -171,11 +171,11 @@ import threading
 import csv
 import os
 from datetime import datetime
+import serial.tools.list_ports
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import serial.tools.list_ports
 
 class VescGUI:
     def __init__(self, master):
@@ -327,17 +327,20 @@ class VescGUI:
     def save_csv(self):
         if not self.log_data:
             return
-        # Create a folder called "logs" if it doesn't exist.
-        if not os.path.exists("logs"):
-            os.makedirs("logs")
-        filename = datetime.now().strftime("logs/vesc_log_%Y%m%d_%H%M%S.csv")
-        with open(filename, "w", newline="") as csvfile:
+        # Determine the directory where the script is located.
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        log_dir = os.path.join(script_dir, "logs")
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        filename = datetime.now().strftime("vesc_log_%Y%m%d_%H%M%S.csv")
+        filepath = os.path.join(log_dir, filename)
+        with open(filepath, "w", newline="") as csvfile:
             fieldnames = ["time", "current", "voltage"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             for entry in self.log_data:
                 writer.writerow(entry)
-        print(f"Log saved to {filename}")
+        print(f"Log saved to {filepath}")
 
     def set_duty(self):
         """Set the motor duty cycle based on the input box value."""
